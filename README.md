@@ -1,5 +1,5 @@
 # VALSE-EP
-Implement the line spectral estimation from quantized measurements
+Implement the line spectral estimation from quantized measurements.
 This code (VALSE-EP) is built based on the VALSE algorithm, and is written by Jiang Zhu, Qi Zhang and Xiangming Meng. 
 The VALSE-EP is designed to perform line spectral estimation from quantized samples. 
 If you have any problems about the code, please feel free to contact jiangzhu16@zju.edu.cn
