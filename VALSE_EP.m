@@ -1,7 +1,7 @@
 function out = VALSE_EP( y_q, m, ha, x, Iter_max, B, yy_min, alpha, method_EP )
 %VALSE algorithm for line spectral estimation
 % INPUTS:
-%   y  - measurement vector of size M
+%   y_q  - measurement vector 
 %   m  - is a vector containing the indices (in ascending order) of the M
 %       measurements; subset of {0,1,...,m(end)}
 %   ha - indicator determining which approximation of the
@@ -21,12 +21,6 @@ function out = VALSE_EP( y_q, m, ha, x, Iter_max, B, yy_min, alpha, method_EP )
 %      .mse        - evolution of the mse of x_estimate with iterations
 %      .K          - evolution of the estimated number of components with iterations
 %
-% See full paper:
-% "Variational Bayesian Inference of Line Spectra"
-% preprint available at https://arxiv.org/abs/1604.03744
-% by Mihai Badiu, Thomas Hansen, and Bernard Fleury
-%
-% Matlab code written by Mihai Badiu, March 2016
 M     = size(m,1);
 N     = m(M)+1;     % size of full data
 L     = N;          % assumed number of components
@@ -159,9 +153,6 @@ end
 cont = 1;
 while cont
     
-%         if t==855
-%             11
-%         end
         t = t + 1;
         % Update the support and weights
         [ K, s, w, C ] = maxZ_diag( J, h, M, sigma, rho, tau );
@@ -225,14 +216,9 @@ while cont
         
         
         v_A_ext = v_A_post.*v_B_ext./(v_B_ext-v_A_post);
-%         whos v_A_ext
         v_A_ext = v_A_ext.*(v_A_ext>0)+max(v_A_ext)*10*(v_A_ext<=0);
         z_A_ext = v_A_ext.*(z_A_post./v_A_post-y./v_B_ext); 
-%         v_A_ext = v_A_ext.*(v_A_ext>0)+max(v_A_ext)*10*(v_A_ext<=0);
-%         v_A_ext = (1-dampfac)*v_A_ext_old+dampfac*v_A_ext;
-%         z_A_ext = (1-dampfac)*z_A_ext_old+dampfac*z_A_ext;
-%         v_A_ext_old = v_A_ext;
-%         z_A_ext_old = z_A_ext;
+
         if B<inf
                 z_A_ext_real = [real(z_A_ext);imag(z_A_ext)];
                 v_A_ext_real = [v_A_ext;v_A_ext]/2;
@@ -249,12 +235,6 @@ while cont
                 v_B_ext = v_B_post.*v_A_ext./(v_A_ext-v_B_post+eps);
                 z_B_ext = v_B_ext.*(z_B_post./v_B_post-z_A_ext./v_A_ext);
                 nu = mean(abs(z_B_ext-z_B_post).^2+v_B_post);
-%                 [z_B_post_real, v_B_post_real] = GaussianMomentsComputation_MJH(y_q, z_A_ext_real, v_A_ext_real, yy_min, B, alpha, nu/2);
-%                 v_B_post = v_B_post_real(1:end/2)+v_B_post_real(end/2+1:end);
-%                 z_B_post = z_B_post_real(1:end/2)+1j*z_B_post_real(end/2+1:end);
-% 
-%                 v_B_ext = v_B_post.*v_A_ext./(v_A_ext-v_B_post+eps);
-%                 z_B_ext = v_B_ext.*(z_B_post./v_B_post-z_A_ext./v_A_ext);
         else
                v_B_post = nu.*v_A_ext./(nu+v_A_ext);
                z_B_post = v_B_post.*(z_A_ext./v_A_ext+y_q./nu);
@@ -263,11 +243,7 @@ while cont
 
         
                nu = mean(abs(z_B_ext-z_B_post).^2+v_B_post);
-               
-%                v_B_post = nu.*v_A_ext./(nu+v_A_ext);
-%                z_B_post = v_B_post.*(z_A_ext./v_A_ext+y_q./nu);  
-%                v_B_ext = v_B_post.*v_A_ext./(v_A_ext-v_B_post);
-%                z_B_ext = v_B_ext.*(z_B_post./v_B_post-z_A_ext./v_A_ext);      
+                   
 
         end
         sigma = v_B_ext;
@@ -277,19 +253,6 @@ while cont
         h   = A(m+1,:)'*diag(1./sigma)*y;
         
         
-%         w     = zeros(L,1);
-%         C     = zeros(L);
-%         for l = 1:L
-%             w_temp = w(1:l-1); C_temp = C(1:l-1,1:l-1);
-%             v = 1/(sum(1./sigma)+1/tau-real(J(1:l-1,l)'*C_temp*J(1:l-1,l)));  % diagonal case
-%             u = v .* (h(l) - J(1:l-1,l)'*w_temp);
-%             w(l) = u;
-%             ctemp = C_temp*J(1:l-1,l);
-%             w(1:l-1) = w_temp - ctemp*u;
-%             C(1:l-1,1:l-1) = C_temp + v*(ctemp*ctemp');
-%             C(1:l-1,l) = -v*ctemp;  C(l,1:l-1) = C(1:l-1,l)'; C(l,l) = v;
-%         end
-%         tau = real( w(s)'*w(s)+trace(C(s,s)) )/K;
         
         xr     = A(:,s)*w(s);
         if B==1
@@ -303,7 +266,7 @@ while cont
     % stopping criterion:
     % the relative change of the reconstructed signalis below threshold or
     % max number of iterations is reached
-        if (norm(xr-xro)/norm(xro)<1e-8) || (norm(xro)==0&&norm(xr-xro)==0) || (t >= Iter_max)||nu>1e40
+        if (norm(xr-xro)/norm(xro)<1e-6) || (norm(xro)==0&&norm(xr-xro)==0) || (t >= Iter_max)||nu>1e40
             cont = 0;
             mse(t+1:end) = mse(t);
             Kt(t+1:end)  = Kt(t);
